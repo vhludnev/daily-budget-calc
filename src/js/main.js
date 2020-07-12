@@ -14,7 +14,8 @@ let startBtn = document.getElementById("start"),
 	expensesItem = document.getElementsByClassName('expenses-item'),
 	expensesBtn = document.getElementsByTagName('button')[0],
 	optionalExpensesBtn = document.getElementsByTagName('button')[1],
-	countBtn = document.getElementsByTagName('button')[2],
+	optionalExpensesBtnClear = document.getElementsByTagName('button')[2],
+	countBtn = document.getElementsByTagName('button')[3],
 	optionalExpensesItem = document.querySelectorAll('.optionalexpenses-item'),
 	incomeItem = document.querySelector('.choose-income'),
 	checkSavings = document.querySelector('#savings'),
@@ -32,17 +33,21 @@ let startBtn = document.getElementById("start"),
 	countBtn.disabled = true;
 
 	startBtn.addEventListener('click', function() {
-		time = prompt('Введите дату в формате YYYY-MM-DD', '');
-		money = +prompt("Ваш бюджет на месяц?", '');
-	
-		while (isNaN(money) || money == '' || money == null) {
-			money = prompt("Ваш бюджет?", "");
+		time = prompt('Enter date YYYY-MM-DD', '');
+		while (isNaN(Date.parse(time)) || time == '' || time == null) {
+			time = prompt("Check the date YYYY-MM-DD", "");
 		}
+
+		money = +prompt("Your monthly budget?", '');
+		while (isNaN(money) || money == '' || money == null) {
+			money = prompt("Your budget?", "");
+		}
+		
 		appData.budget = money;
 		appData.timeData = time;
-		/* budgetValue.textContent = money.toFixed(); */
-		yearValue.value = new Date(Date.parse(time)).getFullYear();
-		monthValue.value = new Date(Date.parse(time)).getMonth() + 1; /* поскольку месяц начинается со значения 0 */
+		budgetValue.textContent = money.toFixed();
+		yearValue.value = new Date(Date.parse(time)).getFullYear(); /* [.value] because in html it is in [input] */
+		monthValue.value = new Date(Date.parse(time)).getMonth() + 1; /* each month begins with 0 */
 		dayValue.value = new Date(Date.parse(time)).getDate();
 
 		expensesBtn.disabled = false;
@@ -59,10 +64,13 @@ let startBtn = document.getElementById("start"),
 			if ((typeof (a)) != null && (typeof (b)) != null && a != '' && b != '' && a.length < 50) {
 				appData.expenses[a] = b;
 				sum += +b;
+				expensesValue.textContent = sum; /* [.textContent] because in html it is in [div] */
 			} else {
 				i = i - 1;
 			}
-			expensesValue.textContent = sum;
+			if (isNaN(sum)) {
+				expensesValue.textContent = "Error! Please, check the prices!";
+			}
 		}
 	});
 	
@@ -73,33 +81,21 @@ let startBtn = document.getElementById("start"),
 			optionalExpensesValue.textContent += appData.optionalExpenses[i] + ' ';
 		}
 	});
-	
-	countBtn.addEventListener('click', function() {
-		if (appData.budget != undefined) {
-			appData.moneyPerDay = ((appData.budget - +expensesValue.textContent) / 30).toFixed();
-			dayBudgetValue.textContent = appData.moneyPerDay;
-			if (appData.moneyPerDay < 100) {
-				levelValue.textContent = 'Минимальный уровень достатка';
-			} else if (appData.moneyPerDay > 100 && appData.moneyPerDay < 2000) {
-				levelValue.textContent = 'Средний уровень достатка';
-			} else if (appData.moneyPerDay > 2000) {
-				levelValue.textContent = 'Высокий уровень достатка';
-			} else {
-				levelValue.textContent = 'Произошла ошибка';
-			}
-		} else {
-			dayBudgetValue.textContent = 'Произошла ошибка';
-		}
+
+	optionalExpensesBtnClear.addEventListener('click', function() {
+		optionalExpensesValue.textContent = null;
+
 	});
 	
-	incomeItem.addEventListener('input', () => {   /* [() =>] то же самое что и [function()] */
+	
+	incomeItem.addEventListener('input', () => {   /* [() =>] the same as [function()] */
 		let items = incomeItem.value;
-		if (isNaN(items) || items != '') {                 /* пока не понятно зачем */
+		if (isNaN(items) || items != '') {                 
 			appData.income = items.split(',');
 			incomeValue.textContent = appData.income;
-		} 
-		/* appData.income = items.split(', ');
-		incomeValue.textContent = appData.income; */
+		} else {
+			incomeValue.textContent = null;
+		}
 	});
 	
 	checkSavings.addEventListener("click", () => {
@@ -114,24 +110,57 @@ let startBtn = document.getElementById("start"),
 		if (appData.savings == true) {
 			let sum = +sumValue.value;
 			let percent = +percentValue.value;
-			appData.monthIncome = sum/100/12*percent;
-			appData.yearIncome = sum/100*percent;
-			monthSavingsValue.textContent = appData.monthIncome.toFixed(1); /* toFixed(1) - одно значение после запятой */
-			yearSavingsValue.textContent = appData.yearIncome.toFixed(1);
-		}
+			if (isNaN(sum) || isNaN(percent)) {                 
+				monthSavingsValue.textContent = "Error";
+				yearSavingsValue.textContent = "Error";	
+				budgetValue.textContent = money.toFixed();
+			} else {
+				appData.monthIncome = sum/100/12*percent;
+				appData.yearIncome = sum/100*percent;
+				monthSavingsValue.textContent = appData.monthIncome.toFixed(1); /* toFixed(1) - one decimal value after comma */
+				yearSavingsValue.textContent = appData.yearIncome.toFixed(1);
+				budgetValue.textContent = money.toFixed() + +appData.monthIncome.toFixed();
+			}
+		} 
 	});
 	
 	percentValue.addEventListener('input', () => {
 		if (appData.savings == true) {
 			let sum = +sumValue.value;
 			let percent = +percentValue.value;
-			appData.monthIncome = sum/100/12*percent;
-			appData.yearIncome = sum/100*percent;
-			monthSavingsValue.textContent = appData.monthIncome.toFixed(1);
-			yearSavingsValue.textContent = appData.yearIncome.toFixed(1);	
-		}
-	budgetValue.textContent = money.toFixed() + +appData.monthIncome.toFixed();
+			if (isNaN(sum) || isNaN(percent)) {                 
+				monthSavingsValue.textContent = "Error";
+				yearSavingsValue.textContent = "Error";	
+				budgetValue.textContent = money.toFixed();
+			} else {
+				appData.monthIncome = sum/100/12*percent;
+				appData.yearIncome = sum/100*percent;
+				monthSavingsValue.textContent = appData.monthIncome.toFixed(1);
+				yearSavingsValue.textContent = appData.yearIncome.toFixed(1);	
+				budgetValue.textContent = money.toFixed() + +appData.monthIncome.toFixed();
+			
+			}
+		} 
 	});
+	
+	countBtn.addEventListener('click', function() {
+		if (appData.budget != undefined) {
+			appData.moneyPerDay = ((appData.budget + appData.monthIncome - +expensesValue.textContent) / 30).toFixed();
+			dayBudgetValue.textContent = appData.moneyPerDay;
+			if (appData.moneyPerDay < 100) {
+				levelValue.textContent = 'Minimum level of wealth';
+			} else if (appData.moneyPerDay > 100 && appData.moneyPerDay < 2000) {
+				levelValue.textContent = 'Medium level of wealth';
+			} else if (appData.moneyPerDay > 2000) {
+				levelValue.textContent = 'High level of wealth';
+			} else {
+				levelValue.textContent = 'Error';
+			}
+		} else {
+			dayBudgetValue.textContent = 'Error';
+		}
+	});
+	
 	
 	const appData = {
 		budget: money,
